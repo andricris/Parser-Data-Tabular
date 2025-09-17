@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parser Data Tabular</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 2rem;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            text-align: center;
+            color: white;
+            padding: 2rem 0 1rem;
+        }
+        
+        .page-header h1 {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .author {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+        }
+        
+        .author a {
+            color: #ffeb3b;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .author a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        .instructions {
+            background-color: #e8f4fd;
+            border-left: 4px solid #0d6efd;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-container {
+            margin-bottom: 2rem;
+        }
+        
+        .input-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+        
+        .data-input {
+            font-family: monospace;
+            min-height: 300px;
+            font-size: 14px;
+            line-height: 1.4;
+            padding: 1rem;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            resize: vertical;
+        }
+        
+        .data-input:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .options-container {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .option-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+        
+        .btn-action {
+            min-width: 140px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            margin: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .result-section {
+            margin-top: 2rem;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .result-count {
+            font-size: 1.1rem;
+            background-color: #6c757d;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+        
+        .result-table {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 14px;
+        }
+        
+        .result-table th {
+            background-color: #0d6efd;
+            color: white;
+            padding: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .result-table td {
+            padding: 0.5rem 0.75rem;
+            vertical-align: middle;
+        }
+        
+        .result-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .footer {
+            color: white;
+            text-align: center;
+            padding: 1.5rem 0;
+            margin-top: 2rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .buttons-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-action {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .result-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .data-input {
+                min-height: 250px;
+            }
+            
+            .result-table {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div class="container">
+            <h1 class="display-4">Parser Data Tabular</h1>
+            <p class="author">Created by <a href="https://andri-land.biz.id" target="_blank">h3store</a></p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="main-container">
+            <div class="instructions">
+                <h3 class="mt-0">Cara Penggunaan:</h3>
+                <ol class="mb-0">
+                    <li>Salin data tabular dari Excel atau sumber lainnya</li>
+                    <li>Tempel data ke dalam textarea di bawah</li>
+                    <li>Pilih opsi filter data jika diperlukan</li>
+                    <li>Klik tombol "Proses Data" untuk mengonversi format data</li>
+                    <li>Gunakan tombol "Salin Hasil" untuk menyalin data yang telah diproses</li>
+                    <li>Gunakan tombol "Bersihkan" untuk menghapus data</li>
+                </ol>
+            </div>
+            
+            <div class="input-container">
+                <label for="inputData" class="input-label">Data Input:</label>
+                <textarea class="form-control data-input" id="inputData"></textarea>
+            </div>
+            
+            <div class="options-container">
+                <div class="option-title">Opsi Filter Data:</div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="hideZeroValues" checked>
+                    <label class="form-check-label" for="hideZeroValues">
+                        Sembunyikan data dengan quantity 0
+                    </label>
+                </div>
+            </div>
+            
+            <div class="buttons-container">
+                <button class="btn btn-primary btn-action" onclick="processData()">
+                    <i class="bi bi-play-fill"></i> Proses Data
+                </button>
+                <button class="btn btn-success btn-action" onclick="copyResults()">
+                    <i class="bi bi-clipboard"></i> Salin Hasil
+                </button>
+                <button class="btn btn-danger btn-action" onclick="clearData()">
+                    <i class="bi bi-trash"></i> Bersihkan
+                </button>
+            </div>
+            
+            <div class="result-section">
+                <div class="result-header">
+                    <h3 class="result-title">Hasil Konversi</h3>
+                    <span class="result-count" id="resultCount">0 data</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover result-table">
+                        <thead>
+                            <tr>
+                                <th>Cabang</th>
+                                <th>Kode Produk</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <div class="container">
+            <p class="mb-0">© 2025 - Parser Data Tabular</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    
+    <script>
+        // Variabel global untuk menyimpan hasil
+        let processedData = [];
+        let allData = []; // Menyimpan semua data sebelum difilter
+        
+        function processData() {
+            const inputData = document.getElementById('inputData').value.trim();
+            const resultBody = document.getElementById('resultBody');
+            const resultCount = document.getElementById('resultCount');
+            const hideZeroValues = document.getElementById('hideZeroValues').checked;
+            
+            // Clear previous results
+            resultBody.innerHTML = '';
+            processedData = [];
+            allData = [];
+            
+            if (!inputData) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Kosong',
+                    text: 'Silakan masukkan data terlebih dahulu!',
+                    confirmButtonColor: '#0d6efd'
+                });
+                resultCount.textContent = '0 data';
+                return;
+            }
+            
+            try {
+                const lines = inputData.split('\n').filter(line => line.trim() !== '');
+                if (lines.length < 2) {
+                    throw new Error('Data harus memiliki setidaknya header dan satu baris data');
+                }
+                
+                // Parse header (baris pertama)
+                const headerLine = lines[0].trim();
+                const headers = parseLine(headerLine);
+                
+                // Asumsikan kolom pertama adalah cabang
+                const cabangIndex = 0;
+                
+                // Process data rows (mulai dari baris kedua)
+                const results = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const values = parseLine(line);
+                    if (values.length < 1) continue;
+                    
+                    const branch = values[cabangIndex]; // Ambil nilai cabang
+                    
+                    // Loop melalui setiap kolom (kecuali kolom cabang)
+                    for (let j = 1; j < values.length && j < headers.length; j++) {
+                        const quantity = parseInt(values[j].replace(/"/g, '')); // Hapus quotes jika ada
+                        if (isNaN(quantity)) {
+                            continue; // Skip jika bukan angka
+                        }
+                        
+                        const productCode = headers[j]; // Kode produk dari header
+                        
+                        // Simpan data
+                        const resultItem = {
+                            cabang: branch,
+                            kode: productCode,
+                            quantity: quantity
+                        };
+                        
+                        // Simpan semua data
+                        allData.push(resultItem);
+                        
+                        // Filter data berdasarkan opsi
+                        if (!hideZeroValues || quantity !== 0) {
+                            results.push(resultItem);
+                            processedData.push(resultItem);
+                        }
+                    }
+                }
+                
+                // Display results
+                if (results.length === 0) {
+                    resultCount.textContent = '0 data';
+                    const message = hideZeroValues ? 
+                        'Tidak ada data yang dapat diproses (semua quantity 0 dan disembunyikan)' : 
+                        'Tidak ada data yang dapat diproses';
+                    
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Tidak Ada Data',
+                        text: message,
+                        confirmButtonColor: '#0d6efd'
+                    });
+                    return;
+                }
+                
+                resultCount.textContent = `${results.length} data`;
+                
+                // Add rows to table
+                results.forEach(item => {
+                    const row = resultBody.insertRow();
+                    row.insertCell(0).textContent = item.cabang;
+                    row.insertCell(1).textContent = item.kode;
+                    row.insertCell(2).textContent = item.quantity;
+                });
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: `Data berhasil diproses, ${results.length} entri ditemukan`,
+                    confirmButtonColor: '#0d6efd'
+                });
+                
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi Kesalahan',
+                    text: error.message,
+                    confirmButtonColor: '#0d6efd'
+                });
+                resultCount.textContent = '0 data';
+            }
+        }
+        
+        // Helper function untuk parsing baris
+        function parseLine(line) {
+            // Coba parsing dengan tab terlebih dahulu (format Excel)
+            if (line.includes('\t')) {
+                return line.split('\t').map(item => item.trim().replace(/^"|"$/g, '')).filter(item => item !== '');
+            }
+            
+            // Coba parsing dengan pipe
+            if (line.includes('|')) {
+                return line.split('|').map(item => item.trim().replace(/^"|"$/g, '')).filter(item => item !== '');
+            }
+            
+            // Jika tidak ada tab atau pipe, gunakan spasi (tapi hati-hati dengan spasi berlebih)
+            return line.split(/\s+/).map(item => item.replace(/^"|"$/g, '')).filter(item => item !== '');
+        }
+        
+        function copyResults() {
+            if (processedData.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tidak Ada Data',
+                    text: 'Tidak ada data untuk disalin. Silakan proses data terlebih dahulu.',
+                    confirmButtonColor: '#0d6efd'
+                });
+                return;
+            }
+            
+            // Prepare data for copying
+            let copyText = `Cabang\tKode Produk\tQuantity\n`;
+            
+            processedData.forEach(item => {
+                copyText += `${item.cabang}\t${item.kode}\t${item.quantity}\n`;
+            });
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(copyText).then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil Disalin!',
+                    text: 'Data telah disalin ke clipboard. Anda dapat menempelkannya langsung ke Excel.',
+                    confirmButtonColor: '#198754'
+                });
+            }).catch(err => {
+                // Fallback untuk browser lama
+                const textarea = document.createElement('textarea');
+                textarea.value = copyText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Disalin!',
+                        text: 'Data telah disalin ke clipboard. Anda dapat menempelkannya langsung ke Excel.',
+                        confirmButtonColor: '#198754'
+                    });
+                } catch (e) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Menyalin',
+                        text: 'Terjadi kesalahan saat menyalin data. Silakan coba lagi.',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+                
+                document.body.removeChild(textarea);
+            });
+        }
+        
+        function clearData() {
+            document.getElementById('inputData').value = '';
+            document.getElementById('resultBody').innerHTML = '';
+            document.getElementById('resultCount').textContent = '0 data';
+            processedData = [];
+            allData = [];
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Data Dihapus',
+                text: 'Semua data telah dihapus',
+                confirmButtonColor: '#0d6efd'
+            });
+        }
+        
+        // Jika opsi filter diubah, proses ulang data
+        document.getElementById('hideZeroValues').addEventListener('change', function() {
+            if (allData.length > 0) {
+                processData();
+            }
+        });
+    </script>
+</body>
+</html>
