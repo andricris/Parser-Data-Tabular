@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parser Data Tabular + Lookup Nama Produk</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"/>
+
+  <style>
+    body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    .main-container{background:#fff;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.15);margin:2rem auto;padding:2rem}
+    .page-header{text-align:center;color:#fff;padding:2rem 0 1rem}
+    .page-header h1{font-weight:800;text-shadow:2px 2px 6px rgba(0,0,0,.25)}
+    .author{opacity:.95}
+    .author a{color:#ffeb3b;text-decoration:none}
+    .instructions{background:#e8f4fd;border-left:4px solid #0d6efd;padding:1rem 1.25rem;border-radius:10px;margin-bottom:1rem}
+    .data-input{font-family:ui-monospace,Consolas,monospace;min-height:220px}
+    .btn-action{min-width:150px}
+    .result-table th{background:#0d6efd;color:#fff}
+    .badge-pill{border-radius:999px}
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <div class="container">
+      <h1>Parser Data Tabular</h1>
+      <p class="author">Author: <a href="https://andri-land.biz.id" target="_blank" rel="noopener">H3Store</a></p>
+      <div id="dbInfo" class="mt-2">
+        <span id="dbStatus" class="badge text-bg-secondary badge-pill px-3 py-2">
+          <i class="bi bi-database"></i> Memuat database produk...
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="main-container">
+      <div class="instructions">
+        <ol class="mb-0">
+          <li>Kolom pertama data = <b>Cabang</b>, header kolom lain = <b>Kode Produk</b>.</li>
+          <li>Tempel data dari Excel ke textarea → klik <b>Proses Data</b>.</li>
+          <li>Kolom <b>Nama Produk</b> di-lookup dari <code>database.json</code>.</li>
+        </ol>
+      </div>
+
+      <label class="form-label">Data Input:</label>
+      <textarea id="inputData" class="form-control data-input" placeholder="Contoh:\nCABANG\tPE300016\tPE300013\nBDG1\t150\t100\nBGR1\t50\t15"></textarea>
+
+      <div class="mt-3 p-3 bg-light rounded d-flex align-items-center gap-3 flex-wrap">
+        <div class="form-check me-3">
+          <input class="form-check-input" type="checkbox" id="hideZeroValues" checked>
+          <label class="form-check-label" for="hideZeroValues">Sembunyikan quantity 0</label>
+        </div>
+
+        <button class="btn btn-primary btn-action" onclick="processData()">
+          <i class="bi bi-play-fill"></i> Proses Data
+        </button>
+        <button class="btn btn-success btn-action" onclick="copyResults()">
+          <i class="bi bi-clipboard-check"></i> Salin Hasil
+        </button>
+        <button class="btn btn-outline-dark ms-auto" onclick="clearData()">
+          <i class="bi bi-trash"></i> Bersihkan
+        </button>
+      </div>
+
+      <div class="d-flex align-items-center justify-content-between mt-4 mb-2">
+        <h5 class="mb-0">Hasil Konversi</h5>
+        <span id="resultCount" class="badge text-bg-secondary">0 data</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover table-striped result-table">
+          <thead>
+            <tr>
+              <th>Cabang</th>
+              <th>Kode Produk</th>
+              <th>Nama Produk</th>
+              <th class="text-end">Quantity</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    let PRODUCT_DB = new Map();
+    const dbStatusEl = document.getElementById('dbStatus');
+    let processedData = [], allData = [];
+
+    function normalizeCode(code){ return String(code||'').trim().toUpperCase(); }
+
+    async function loadDatabase(){
+      try{
+        const r = await fetch('./database.json', {cache:'no-store'});
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const arr = await r.json();
+        applyDatabase(arr);
+        dbStatusEl.className = 'badge text-bg-success';
+        dbStatusEl.innerHTML = `<i class="bi bi-check-circle"></i> Database dimuat (${PRODUCT_DB.size} produk)`;
+      }catch(err){
+        console.error('Gagal memuat database:', err);
+        dbStatusEl.className = 'badge text-bg-danger';
+        dbStatusEl.innerHTML = `<i class="bi bi-x-circle"></i> Database gagal dimuat`;
+      }
+    }
+
+    function applyDatabase(arr){
+      PRODUCT_DB.clear();
+      for(const row of arr){
+        const k = normalizeCode(row.sales_part_no);
+        const v = String(row.part_description_in_use||'').trim();
+        if(k) PRODUCT_DB.set(k, v);
+      }
+    }
+    loadDatabase();
+
+    function processData(){
+      const input = document.getElementById('inputData').value.trim();
+      const hideZero = document.getElementById('hideZeroValues').checked;
+      const body = document.getElementById('resultBody');
+      const resultCount = document.getElementById('resultCount');
+      body.innerHTML = '';
+      processedData = []; allData = [];
+
+      if(!input){
+        Swal.fire({icon:'warning', title:'Data kosong', text:'Tempel data terlebih dahulu.'});
+        resultCount.textContent = '0 data';
+        return;
+      }
+
+      try{
+        const lines = input.split('\n').filter(l => l.trim()!=='');
+        const headers = parseLine(lines[0]);
+        for(let i=1;i<lines.length;i++){
+          const vals = parseLine(lines[i]);
+          const cabang = vals[0];
+          for(let j=1;j<vals.length && j<headers.length;j++){
+            const qty = parseInt(vals[j]);
+            if(isNaN(qty)) continue;
+            const kode = headers[j];
+            const nama = PRODUCT_DB.get(normalizeCode(kode)) || '(Kode tidak ditemukan)';
+            const row = {cabang, kode, nama, quantity: qty};
+            allData.push(row);
+            if(!hideZero || qty!==0) processedData.push(row);
+          }
+        }
+        resultCount.textContent = processedData.length+" data";
+        renderRows(processedData, body);
+      }catch(err){
+        Swal.fire({icon:'error', title:'Error', text: err.message});
+        resultCount.textContent = '0 data';
+      }
+    }
+
+    function renderRows(rows, tbody){
+      const frag = document.createDocumentFragment();
+      for(const r of rows){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.cabang}</td><td>${r.kode}</td><td>${r.nama}</td><td class="text-end">${r.quantity}</td>`;
+        frag.appendChild(tr);
+      }
+      tbody.appendChild(frag);
+    }
+
+    function parseLine(line){
+      if(line.includes('\t')) return line.split('\t').map(s=>s.trim());
+      if(line.includes('|')) return line.split('|').map(s=>s.trim());
+      return line.split(/\s+/);
+    }
+
+    function copyResults(){
+      if(processedData.length===0){Swal.fire({icon:'warning',title:'Tidak ada hasil'});return;}
+      let t='Cabang\tKode Produk\tNama Produk\tQuantity\n';
+      processedData.forEach(r=>{t+=`${r.cabang}\t${r.kode}\t${r.nama}\t${r.quantity}\n`;});
+      navigator.clipboard.writeText(t).then(()=>Swal.fire({icon:'success',title:'Disalin!'}));
+    }
+
+    function clearData(){
+      document.getElementById('inputData').value='';
+      document.getElementById('resultBody').innerHTML='';
+      document.getElementById('resultCount').textContent='0 data';
+      processedData=[]; allData=[];
+      Swal.fire({icon:'success',title:'Bersih!'});
+    }
+
+    document.getElementById('hideZeroValues').addEventListener('change', ()=>{if(allData.length>0) processData();});
+  </script>
+</body>
+</html>
