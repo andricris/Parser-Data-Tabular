@@ -48,7 +48,7 @@
       </div>
 
       <label class="form-label">Data Input:</label>
-      <textarea id="inputData" class="form-control data-input" placeholder="Contoh:\nCABANG\tPE300016\tPE300013\nBDG1\t150\t100\nBGR1\t50\t15"></textarea>
+      <textarea id="inputData" class="form-control data-input" placeholder="Contoh:&#10;CABANG	PE300016	PE300013&#10;BDG1	150	100&#10;BGR1	50	0"></textarea>
 
       <div class="mt-3 p-3 bg-light rounded d-flex align-items-center gap-3 flex-wrap">
         <div class="form-check me-3">
@@ -94,7 +94,9 @@
   <script>
     let PRODUCT_DB = new Map();
     const dbStatusEl = document.getElementById('dbStatus');
-    let processedData = [], allData = [];
+    
+    let allData = [];
+    let processedData = [];
 
     function normalizeCode(code){ return String(code||'').trim().toUpperCase(); }
 
@@ -104,11 +106,11 @@
         if(!r.ok) throw new Error('HTTP '+r.status);
         const arr = await r.json();
         applyDatabase(arr);
-        dbStatusEl.className = 'badge text-bg-success';
+        dbStatusEl.className = 'badge text-bg-success badge-pill px-3 py-2';
         dbStatusEl.innerHTML = `<i class="bi bi-check-circle"></i> Database dimuat (${PRODUCT_DB.size} produk)`;
       }catch(err){
         console.error('Gagal memuat database:', err);
-        dbStatusEl.className = 'badge text-bg-danger';
+        dbStatusEl.className = 'badge text-bg-danger badge-pill px-3 py-2';
         dbStatusEl.innerHTML = `<i class="bi bi-x-circle"></i> Database gagal dimuat`;
       }
     }
@@ -125,15 +127,11 @@
 
     function processData(){
       const input = document.getElementById('inputData').value.trim();
-      const hideZero = document.getElementById('hideZeroValues').checked;
-      const body = document.getElementById('resultBody');
-      const resultCount = document.getElementById('resultCount');
-      body.innerHTML = '';
-      processedData = []; allData = [];
+      allData = []; 
 
       if(!input){
         Swal.fire({icon:'warning', title:'Data kosong', text:'Tempel data terlebih dahulu.'});
-        resultCount.textContent = '0 data';
+        filterAndDisplayResults(); 
         return;
       }
 
@@ -144,21 +142,41 @@
           const vals = parseLine(lines[i]);
           const cabang = vals[0];
           for(let j=1;j<vals.length && j<headers.length;j++){
-            const qty = parseInt(vals[j]);
-            if(isNaN(qty)) continue;
+            // --- PERBAIKAN DI SINI ---
+            // Menganggap nilai kosong atau '-' sebagai 0
+            const val = vals[j];
+            const qty = (val === '' || val === '-') ? 0 : parseInt(val, 10);
+            
+            if(isNaN(qty)) continue; // Lewati jika masih bukan angka (misal: teks)
+
             const kode = headers[j];
             const nama = PRODUCT_DB.get(normalizeCode(kode)) || '(Kode tidak ditemukan)';
-            const row = {cabang, kode, nama, quantity: qty};
-            allData.push(row);
-            if(!hideZero || qty!==0) processedData.push(row);
+            allData.push({cabang, kode, nama, quantity: qty});
           }
         }
-        resultCount.textContent = processedData.length+" data";
-        renderRows(processedData, body);
       }catch(err){
-        Swal.fire({icon:'error', title:'Error', text: err.message});
-        resultCount.textContent = '0 data';
+        Swal.fire({icon:'error', title:'Error', text: 'Gagal memproses data: ' + err.message});
+        allData = []; 
       }
+      
+      filterAndDisplayResults();
+    }
+    
+    function filterAndDisplayResults() {
+      const hideZero = document.getElementById('hideZeroValues').checked;
+      const tbody = document.getElementById('resultBody');
+      const resultCount = document.getElementById('resultCount');
+      
+      tbody.innerHTML = ''; 
+      
+      if (hideZero) {
+        processedData = allData.filter(row => row.quantity !== 0);
+      } else {
+        processedData = [...allData]; 
+      }
+      
+      resultCount.textContent = processedData.length + " data";
+      renderRows(processedData, tbody);
     }
 
     function renderRows(rows, tbody){
@@ -174,25 +192,26 @@
     function parseLine(line){
       if(line.includes('\t')) return line.split('\t').map(s=>s.trim());
       if(line.includes('|')) return line.split('|').map(s=>s.trim());
-      return line.split(/\s+/);
+      return line.split(/\s+/).map(s => s.trim());
     }
 
     function copyResults(){
-      if(processedData.length===0){Swal.fire({icon:'warning',title:'Tidak ada hasil'});return;}
+      if(processedData.length===0){Swal.fire({icon:'warning',title:'Tidak ada hasil untuk disalin'});return;}
       let t='Cabang\tKode Produk\tNama Produk\tQuantity\n';
       processedData.forEach(r=>{t+=`${r.cabang}\t${r.kode}\t${r.nama}\t${r.quantity}\n`;});
-      navigator.clipboard.writeText(t).then(()=>Swal.fire({icon:'success',title:'Disalin!'}));
+      navigator.clipboard.writeText(t).then(()=>Swal.fire({icon:'success',title:'Disalin!', showConfirmButton: false, timer: 1200}));
     }
 
     function clearData(){
       document.getElementById('inputData').value='';
-      document.getElementById('resultBody').innerHTML='';
-      document.getElementById('resultCount').textContent='0 data';
-      processedData=[]; allData=[];
-      Swal.fire({icon:'success',title:'Bersih!'});
+      allData = [];
+      processedData = [];
+      filterAndDisplayResults(); 
+      Swal.fire({icon:'info',title:'Bersih!', showConfirmButton: false, timer: 1000});
     }
 
-    document.getElementById('hideZeroValues').addEventListener('change', ()=>{if(allData.length>0) processData();});
+    document.getElementById('hideZeroValues').addEventListener('change', filterAndDisplayResults);
   </script>
 </body>
 </html>
+
