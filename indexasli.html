@@ -48,7 +48,7 @@
       </div>
 
       <label class="form-label">Data Input:</label>
-      <textarea id="inputData" class="form-control data-input" placeholder="Contoh:&#10;CABANG	PE300016	PE300013&#10;BDG1	150	100&#10;BGR1	50	15"></textarea>
+      <textarea id="inputData" class="form-control data-input" placeholder="Contoh:&#10;CABANG	PE300016	PE300013&#10;BDG1	150	100&#10;BGR1	50	0"></textarea>
 
       <div class="mt-3 p-3 bg-light rounded d-flex align-items-center gap-3 flex-wrap">
         <div class="form-check me-3">
@@ -94,9 +94,10 @@
   <script>
     let PRODUCT_DB = new Map();
     const dbStatusEl = document.getElementById('dbStatus');
-    // 'allData' untuk menyimpan semua hasil parsing awal
-    // 'processedData' untuk menyimpan hasil yang sudah difilter dan akan ditampilkan
+    
+    // 'allData' adalah sumber data utama yang berisi semua hasil parse.
     let allData = [];
+    // 'processedData' berisi data yang akan ditampilkan setelah difilter.
     let processedData = [];
 
     function normalizeCode(code){ return String(code||'').trim().toUpperCase(); }
@@ -124,18 +125,16 @@
         if(k) PRODUCT_DB.set(k, v);
       }
     }
-    
-    // Fungsi ini hanya untuk mem-parsing input dan menyimpan ke 'allData'
+    loadDatabase();
+
+    // Fungsi ini HANYA untuk mem-parsing input ke variabel allData.
     function processData(){
       const input = document.getElementById('inputData').value.trim();
-      const body = document.getElementById('resultBody');
-      body.innerHTML = '';
-      allData = [];
+      allData = []; // Selalu mulai dari awal
 
       if(!input){
         Swal.fire({icon:'warning', title:'Data kosong', text:'Tempel data terlebih dahulu.'});
-        document.getElementById('resultCount').textContent = '0 data';
-        processedData = [];
+        filterAndDisplayResults(); // Tampilkan tabel kosong
         return;
       }
 
@@ -146,40 +145,38 @@
           const vals = parseLine(lines[i]);
           const cabang = vals[0];
           for(let j=1;j<vals.length && j<headers.length;j++){
-            const qty = parseInt(vals[j]);
+            const qty = parseInt(vals[j], 10);
             if(isNaN(qty)) continue;
             const kode = headers[j];
             const nama = PRODUCT_DB.get(normalizeCode(kode)) || '(Kode tidak ditemukan)';
-            const row = {cabang, kode, nama, quantity: qty};
-            allData.push(row);
+            allData.push({cabang, kode, nama, quantity: qty});
           }
         }
-        // Setelah parsing selesai, panggil fungsi untuk filter dan render
-        applyFilterAndRender();
       }catch(err){
-        Swal.fire({icon:'error', title:'Error', text: err.message});
-        document.getElementById('resultCount').textContent = '0 data';
-        processedData = [];
-        allData = [];
+        Swal.fire({icon:'error', title:'Error', text: 'Gagal memproses data: ' + err.message});
+        allData = []; // Kosongkan data jika error
       }
+      
+      // Setelah parsing selesai, panggil fungsi untuk filter dan render.
+      filterAndDisplayResults();
     }
-
-    // Fungsi BARU: untuk memfilter 'allData' dan menampilkannya di tabel
-    function applyFilterAndRender() {
-        const hideZero = document.getElementById('hideZeroValues').checked;
-        const body = document.getElementById('resultBody');
-        const resultCount = document.getElementById('resultCount');
-        
-        body.innerHTML = ''; // Kosongkan tabel sebelum diisi ulang
-
-        if (hideZero) {
-            processedData = allData.filter(row => row.quantity !== 0);
-        } else {
-            processedData = [...allData]; // Salin semua data jika filter tidak aktif
-        }
-
-        resultCount.textContent = processedData.length + " data";
-        renderRows(processedData, body);
+    
+    // FUNGSI BARU: Untuk filter dan render data dari 'allData' ke tabel.
+    function filterAndDisplayResults() {
+      const hideZero = document.getElementById('hideZeroValues').checked;
+      const tbody = document.getElementById('resultBody');
+      const resultCount = document.getElementById('resultCount');
+      
+      tbody.innerHTML = ''; // Selalu kosongkan tabel dulu
+      
+      if (hideZero) {
+        processedData = allData.filter(row => row.quantity !== 0);
+      } else {
+        processedData = [...allData]; // Jika tidak, salin semua data dari master
+      }
+      
+      resultCount.textContent = processedData.length + " data";
+      renderRows(processedData, tbody);
     }
 
     function renderRows(rows, tbody){
@@ -195,29 +192,27 @@
     function parseLine(line){
       if(line.includes('\t')) return line.split('\t').map(s=>s.trim());
       if(line.includes('|')) return line.split('|').map(s=>s.trim());
-      return line.split(/\s+/);
+      return line.split(/\s+/).map(s => s.trim());
     }
 
     function copyResults(){
-      if(processedData.length===0){Swal.fire({icon:'warning',title:'Tidak ada hasil'});return;}
+      if(processedData.length===0){Swal.fire({icon:'warning',title:'Tidak ada hasil untuk disalin'});return;}
       let t='Cabang\tKode Produk\tNama Produk\tQuantity\n';
       processedData.forEach(r=>{t+=`${r.cabang}\t${r.kode}\t${r.nama}\t${r.quantity}\n`;});
-      navigator.clipboard.writeText(t).then(()=>Swal.fire({icon:'success',title:'Disalin!'}));
+      navigator.clipboard.writeText(t).then(()=>Swal.fire({icon:'success',title:'Disalin!', showConfirmButton: false, timer: 1200}));
     }
 
     function clearData(){
       document.getElementById('inputData').value='';
-      document.getElementById('resultBody').innerHTML='';
-      document.getElementById('resultCount').textContent='0 data';
-      processedData=[]; allData=[];
-      Swal.fire({icon:'info', title:'Data dibersihkan', showConfirmButton: false, timer: 1000});
+      allData = [];
+      processedData = [];
+      filterAndDisplayResults(); // Render tabel kosong
+      Swal.fire({icon:'info',title:'Bersih!', showConfirmButton: false, timer: 1000});
     }
 
-    // Event listener checkbox sekarang memanggil fungsi filter, bukan processData
-    document.getElementById('hideZeroValues').addEventListener('change', applyFilterAndRender);
-    
-    // Memuat database saat halaman dibuka
-    loadDatabase();
+    // Event listener checkbox SEKARANG memanggil fungsi filter, bukan processData.
+    document.getElementById('hideZeroValues').addEventListener('change', filterAndDisplayResults);
   </script>
 </body>
 </html>
+
