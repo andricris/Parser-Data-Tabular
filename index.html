@@ -1,276 +1,350 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Parser Data Tabular + Lookup & Filter</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Tabular v2</title>
+    <!-- Cukup gunakan link bootstrap ini, font Poppins sudah diimpor di CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* --- Tampilan Baru yang Lebih Modern --- */
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"/>
+        /* Import Font Poppins */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
-  <style>
-    body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
-    .main-container{background:#fff;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.15);margin:2rem auto;padding:2rem}
-    .page-header{text-align:center;color:#fff;padding:2rem 0 1rem}
-    .page-header h1{font-weight:800;text-shadow:2px 2px 6px rgba(0,0,0,.25)}
-    .author{opacity:.95}
-    .author a{color:#ffeb3b;text-decoration:none}
-    .instructions{background:#e8f4fd;border-left:4px solid #0d6efd;padding:1rem 1.25rem;border-radius:10px;margin-bottom:1rem}
-    .data-input{font-family:ui-monospace,Consolas,monospace;min-height:220px}
-    .btn-action{min-width:150px}
-    .result-table th{background:#0d6efd;color:#fff}
-    .badge-pill{border-radius:999px}
-    /* Style untuk baris filter */
-    #filterRow th {
-        padding: 0.5rem;
-        background-color: #f0f2f5;
-    }
-    .filter-input {
-        width: 100%;
-        border-radius: 6px;
-        border: 1px solid #ced4da;
-    }
-  </style>
+        /* Variabel Warna untuk kemudahan kustomisasi */
+        :root {
+            --primary-color: #4F46E5; /* Indigo */
+            --primary-hover: #4338CA;
+            --secondary-color: #6B7280; /* Gray */
+            --success-color: #10B981;  /* Emerald */
+            --danger-color: #EF4444;   /* Red */
+            --light-bg: #F9FAFB; /* Off-white */
+            --card-bg: #FFFFFF;
+            --text-dark: #1F2937;
+            --text-light: #6B7280;
+            --border-color: #E5E7EB;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 960px;
+        }
+        
+        /* --- Header --- */
+        .header-main {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+        .author {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* --- Card & Input --- */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem; /* Lebih bulat */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .alert-info {
+            background-color: #EFF6FF;
+            border-color: #BFDBFE;
+            color: #1E40AF;
+        }
+        #dataInput {
+            min-height: 150px;
+            font-family: 'Courier New', Courier, monospace;
+            border-color: var(--border-color);
+        }
+        #dataInput:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+        
+        /* --- Tombol dengan Ikon --- */
+        .btn {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem; /* Jarak antara ikon dan teks */
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); color: white;}
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { background-color: #059669; color: white;}
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover { background-color: #DC2626; color: white;}
+
+        /* --- Tabel --- */
+        .table-responsive {
+            margin-top: 2.5rem;
+        }
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+        }
+        .table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-hover);
+        }
+        .table tbody tr:last-child td { border-bottom: 0; }
+        .table tbody tr:nth-of-type(odd) { background-color: #F9FAFB; }
+        .table tbody tr:hover { background-color: #EFF6FF; } /* Hover biru muda */
+        .table td, .table th {
+            vertical-align: middle;
+            padding: 0.9rem;
+        }
+        .form-control-sm { border-radius: 0.5rem; }
+        .form-control-sm:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        /* --- Badge --- */
+        .badge {
+            padding: 0.5em 0.9em;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+        }
+        .bg-primary { background-color: var(--primary-color) !important; }
+        .bg-success { background-color: var(--success-color) !important; }
+        .bg-secondary { background-color: var(--secondary-color) !important; }
+
+        /* --- Switch Toggle --- */
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+    </style>
 </head>
 <body>
-  <div class="page-header">
-    <div class="container">
-      <h1>Parser Data Tabular</h1>
-      <p class="author">Author: <a href="https://andri-land.biz.id" target="_blank" rel="noopener">H3Store</a></p>
-      <div id="dbInfo" class="mt-2">
-        <span id="dbStatus" class="badge text-bg-secondary badge-pill px-3 py-2">
-          <i class="bi bi-database"></i> Memuat database produk...
-        </span>
-      </div>
+
+<div class="container">
+    <div class="header-main">
+        <h1>Data Tabular v2</h1>
+        <p class="author">Author: H3Store</p>
     </div>
-  </div>
 
-  <div class="container">
-    <div class="main-container">
-      <div class="instructions">
-        <ol class="mb-0">
-          <li>Kolom pertama data = <b>Cabang</b>, header kolom lain = <b>Kode Produk</b>.</li>
-          <li>Tempel data dari Excel ke textarea → klik <b>Proses Data</b>.</li>
-          <li>Kolom <b>Nama Produk</b> di-lookup dari <code>database</code>.</li>
-          <li><b>Jangan sampai ada titik di QTY jika ada akan membaca angka depan saja</b>.</li>
-        </ol>
-      </div>
+    <div class="badge-container justify-content-center mb-4">
+        <span id="db-load-status" class="badge bg-success">Memuat database...</span>
+        <span id="db-update-badge" class="badge bg-primary"></span>
+    </div>
 
-      <label class="form-label">Data Input:</label>
-      <textarea id="inputData" class="form-control data-input" placeholder="Contoh:&#10;CABANG	PE300016	PE300013&#10;BDG1	150	100&#10;BGR1	50	0"></textarea>
+    <div class="card">
+        <div class="card-body p-4">
+            <div class="alert alert-info">
+                <ol class="mb-0 ps-3">
+                    <li>Tempel data matriks dari Excel. Baris pertama untuk **Kode Produk**, kolom pertama untuk **Cabang**.</li>
+                    <li>Klik tombol **Proses Data** untuk konversi.</li>
+                    <li>**Nama Produk & HPP** akan diisi otomatis dari database.</li>
+                    <li>Pastikan tidak ada titik (.) pada angka kuantitas.</li>
+                </ol>
+            </div>
 
-      <div class="mt-3 p-3 bg-light rounded d-flex align-items-center gap-3 flex-wrap">
-        <div class="form-check me-3">
-          <input class="form-check-input" type="checkbox" id="hideZeroValues" checked>
-          <label class="form-check-label" for="hideZeroValues">Sembunyikan quantity 0</label>
+            <div class="mb-3">
+                <label for="dataInput" class="form-label"><strong>Data Input:</strong></label>
+                <textarea class="form-control" id="dataInput" placeholder="Contoh:&#10;cabang   P37JYPL1  P9216180&#10;bks1     1         10&#10;tgr1     0         4"></textarea>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center">
+                <button onclick="prosesData()" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+                    <span>Proses Data</span>
+                </button>
+                <button onclick="salinHasil()" class="btn btn-success ms-2">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
+                    <span>Salin Hasil</span>
+                </button>
+                <button onclick="bersihkan()" class="btn btn-danger ms-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                    <span>Bersihkan</span>
+                </button>
+                <div class="form-check form-switch my-auto ms-md-auto mt-2 mt-md-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="sembunyikanO" onchange="prosesData()">
+                    <label class="form-check-label" for="sembunyikanO">Sembunyikan Qty 0</label>
+                </div>
+            </div>
         </div>
-
-        <button class="btn btn-primary btn-action" onclick="processData()">
-          <i class="bi bi-play-fill"></i> Proses Data
-        </button>
-        <button class="btn btn-success btn-action" onclick="copyResults()">
-          <i class="bi bi-clipboard-check"></i> Salin Hasil
-        </button>
-        <button class="btn btn-outline-dark ms-auto" onclick="clearData()">
-          <i class="bi bi-trash"></i> Bersihkan
-        </button>
-      </div>
-
-      <div class="d-flex align-items-center justify-content-between mt-4 mb-2">
-        <h5 class="mb-0">Hasil Konversi</h5>
-        <span id="resultCount" class="badge text-bg-secondary">0 data</span>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-hover table-striped result-table">
-          <thead>
-            <tr>
-              <th>Cabang</th>
-              <th>Kode Produk</th>
-              <th>Nama Produk</th>
-              <th class="text-end">Quantity</th>
-            </tr>
-            <!-- Baris Filter Baru -->
-            <tr id="filterRow">
-              <th><input type="text" id="filterCabang" class="form-control form-control-sm filter-input" placeholder="Filter Cabang..."></th>
-              <th><input type="text" id="filterKode" class="form-control form-control-sm filter-input" placeholder="Filter Kode..."></th>
-              <th><input type="text" id="filterNama" class="form-control form-control-sm filter-input" placeholder="Filter Nama..."></th>
-              <th><input type="text" id="filterQuantity" class="form-control form-control-sm filter-input text-end" placeholder="Filter Qty..."></th>
-            </tr>
-          </thead>
-          <tbody id="resultBody"></tbody>
-        </table>
-      </div>
     </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <div class="table-responsive">
+        <h4 class="mt-4">Hasil Konversi <span id="total-data" class="badge bg-secondary">0 data</span></h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Cabang</th>
+                    <th>Kode Produk</th>
+                    <th>Nama Produk</th>
+                    <th>Quantity</th>
+                    <th>HPP</th>
+                </tr>
+                <tr>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
+                </tr>
+            </thead>
+            <tbody id="hasilTabel">
+                <!-- Hasil akan ditampilkan di sini -->
+            </tbody>
+        </table>
+    </div>
+</div>
 
-  <script>
-    let PRODUCT_DB = new Map();
-    const dbStatusEl = document.getElementById('dbStatus');
-    
-    let allData = [];
-    let processedData = [];
-    // Objek untuk menyimpan nilai filter
-    let filters = {
-        cabang: '',
-        kode: '',
-        nama: '',
-        quantity: ''
-    };
+<script>
+    let database = [];
 
-    function normalizeCode(code){ return String(code||'').trim().toUpperCase(); }
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('database.json')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                database = data;
+                document.getElementById('db-load-status').textContent = `Database termuat (${database.length} produk)`;
+            })
+            .catch(error => {
+                console.error('Error memuat database:', error);
+                document.getElementById('db-load-status').textContent = 'Gagal memuat database!';
+                document.getElementById('db-load-status').classList.replace('bg-success', 'bg-danger');
+            });
 
-    async function loadDatabase(){
-      try{
-        const r = await fetch('./database.json', {cache:'no-store'});
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        const arr = await r.json();
-        applyDatabase(arr);
-        dbStatusEl.className = 'badge text-bg-success badge-pill px-3 py-2';
-        dbStatusEl.innerHTML = `<i class="bi bi-check-circle"></i> Database dimuat (${PRODUCT_DB.size} produk)`;
-      }catch(err){
-        console.error('Gagal memuat database:', err);
-        dbStatusEl.className = 'badge text-bg-danger badge-pill px-3 py-2';
-        dbStatusEl.innerHTML = `<i class="bi bi-x-circle"></i> Database gagal dimuat`;
-      }
-    }
+        // --- TANGGAL UPDATE MANUAL ---
+        // Ganti tanggal di dalam tanda kutip ("") setiap kali Anda memperbarui database.
+        const lastUpdateDate = "09/10/2025"; // Format: DD/MM/YYYY
+        document.getElementById('db-update-badge').textContent = `Database diperbarui ${lastUpdateDate}`;
+    });
 
-    function applyDatabase(arr){
-      PRODUCT_DB.clear();
-      for(const row of arr){
-        const k = normalizeCode(row.sales_part_no);
-        const v = String(row.part_description_in_use||'').trim();
-        if(k) PRODUCT_DB.set(k, v);
-      }
-    }
-    loadDatabase();
+    function prosesData() {
+        const inputText = document.getElementById('dataInput').value.trim();
+        const tableBody = document.getElementById('hasilTabel');
+        const sembunyikanNol = document.getElementById('sembunyikanO').checked;
+        tableBody.innerHTML = '';
+        let dataCount = 0;
 
-    function processData(){
-      const input = document.getElementById('inputData').value.trim();
-      allData = []; 
-
-      if(!input){
-        Swal.fire({icon:'warning', title:'Data kosong', text:'Tempel data terlebih dahulu.'});
-        filterAndDisplayResults(); 
-        return;
-      }
-
-      try{
-        const lines = input.split('\n').filter(l => l.trim()!=='');
-        const headers = parseLine(lines[0]);
-        for(let i=1;i<lines.length;i++){
-          const vals = parseLine(lines[i]);
-          const cabang = vals[0];
-          for(let j=1;j<vals.length && j<headers.length;j++){
-            const val = vals[j];
-            const qty = (val === '' || val === '-') ? 0 : parseInt(val, 10);
-            if(isNaN(qty)) continue;
-            const kode = headers[j];
-            const nama = PRODUCT_DB.get(normalizeCode(kode)) || '(Kode tidak ditemukan)';
-            allData.push({cabang, kode, nama, quantity: qty});
-          }
+        if (!inputText) {
+            document.getElementById('total-data').textContent = '0 data';
+            return;
         }
-      }catch(err){
-        Swal.fire({icon:'error', title:'Error', text: 'Gagal memproses data: ' + err.message});
-        allData = []; 
-      }
-      
-      filterAndDisplayResults();
-    }
-    
-    function filterAndDisplayResults() {
-      const hideZero = document.getElementById('hideZeroValues').checked;
-      const tbody = document.getElementById('resultBody');
-      const resultCount = document.getElementById('resultCount');
-      
-      tbody.innerHTML = ''; 
-      
-      let filteredData = [...allData];
 
-      // 1. Terapkan filter "Sembunyikan quantity 0"
-      if (hideZero) {
-        filteredData = filteredData.filter(row => row.quantity !== 0);
-      }
-      
-      // 2. Terapkan filter teks dari header
-      if (filters.cabang) {
-        filteredData = filteredData.filter(row => String(row.cabang).toLowerCase().includes(filters.cabang));
-      }
-      if (filters.kode) {
-        filteredData = filteredData.filter(row => String(row.kode).toLowerCase().includes(filters.kode));
-      }
-      if (filters.nama) {
-        filteredData = filteredData.filter(row => String(row.nama).toLowerCase().includes(filters.nama));
-      }
-      if (filters.quantity) {
-        filteredData = filteredData.filter(row => String(row.quantity).toLowerCase().includes(filters.quantity));
-      }
+        const lines = inputText.split('\n').filter(line => line.trim() !== '');
+        if (lines.length < 2) {
+            document.getElementById('total-data').textContent = '0 data';
+            return;
+        }
 
-      processedData = filteredData;
-      resultCount.textContent = processedData.length + " data";
-      renderRows(processedData, tbody);
+        const headerParts = lines[0].trim().split(/\s+/);
+        const productCodes = headerParts.slice(1);
+
+        for (let i = 1; i < lines.length; i++) {
+            const dataParts = lines[i].trim().split(/\s+/);
+            const cabang = dataParts[0];
+            const quantities = dataParts.slice(1);
+
+            for (let j = 0; j < quantities.length; j++) {
+                if (j >= productCodes.length) continue;
+                const qty = parseInt(quantities[j], 10) || 0;
+                const kode = productCodes[j];
+                if (sembunyikanNol && qty === 0) continue;
+
+                const product = database.find(p => p['Part No'] === kode);
+                const namaProduk = product ? product['Part Description'] : '--- TIDAK DITEMUKAN ---';
+                const hpp = product ? (product.hpp || 0) : 0;
+
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = cabang;
+                row.insertCell(1).textContent = kode;
+                row.insertCell(2).textContent = namaProduk;
+                row.insertCell(3).textContent = qty;
+                row.insertCell(4).textContent = hpp;
+                dataCount++;
+            }
+        }
+        document.getElementById('total-data').textContent = `${dataCount} data`;
+        filterTable();
     }
 
-    function renderRows(rows, tbody){
-      const frag = document.createDocumentFragment();
-      for(const r of rows){
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r.cabang}</td><td>${r.kode}</td><td>${r.nama}</td><td class="text-end">${r.quantity}</td>`;
-        frag.appendChild(tr);
-      }
-      tbody.appendChild(frag);
+    function filterTable() {
+        const filters = Array.from(document.querySelectorAll('thead input')).map(input => input.value.toUpperCase());
+        const table = document.querySelector('table');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let row of rows) {
+            const cells = row.getElementsByTagName('td');
+            let display = true;
+            for (let i = 0; i < filters.length; i++) {
+                if (filters[i] && cells[i].textContent.toUpperCase().indexOf(filters[i]) === -1) {
+                    display = false;
+                    break;
+                }
+            }
+            row.style.display = display ? '' : 'none';
+        }
     }
 
-    function parseLine(line){
-      if(line.includes('\t')) return line.split('\t').map(s=>s.trim());
-      if(line.includes('|')) return line.split('|').map(s=>s.trim());
-      return line.split(/\s+/).map(s => s.trim());
+    function salinHasil() {
+        const table = document.querySelector('table');
+        let textToCopy = '';
+        const rows = table.rows;
+        
+        const headerCells = rows[0].getElementsByTagName('th');
+        let headerText = Array.from(headerCells).map(th => th.innerText);
+        textToCopy += headerText.join('\t') + '\n';
+
+        const bodyRows = table.tBodies[0].rows;
+        for (let row of bodyRows) {
+            if (row.style.display !== 'none') {
+                const cells = row.cells;
+                let rowText = Array.from(cells).map(cell => cell.innerText);
+                textToCopy += rowText.join('\t') + '\n';
+            }
+        }
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('Hasil (termasuk header) berhasil disalin!');
+        }, (err) => {
+            console.error('Gagal menyalin: ', err);
+            alert('Gagal menyalin ke clipboard.');
+        });
     }
 
-    function copyResults(){
-      if(processedData.length===0){Swal.fire({icon:'warning',title:'Tidak ada hasil untuk disalin'});return;}
-      let t='Cabang\tKode Produk\tNama Produk\tQuantity\n';
-      processedData.forEach(r=>{t+=`${r.cabang}\t${r.kode}\t${r.nama}\t${r.quantity}\n`;});
-      navigator.clipboard.writeText(t).then(()=>Swal.fire({icon:'success',title:'Disalin!', showConfirmButton: false, timer: 1200}));
+    function bersihkan() {
+        document.getElementById('dataInput').value = '';
+        document.getElementById('hasilTabel').innerHTML = '';
+        document.getElementById('total-data').textContent = '0 data';
+        document.getElementById('sembunyikanO').checked = false;
+        document.querySelectorAll('thead input').forEach(input => input.value = '');
     }
+</script>
 
-    function clearData(){
-      document.getElementById('inputData').value='';
-      // Reset filter dan bersihkan inputnya
-      document.querySelectorAll('.filter-input').forEach(input => input.value = '');
-      filters = { cabang: '', kode: '', nama: '', quantity: '' };
-      
-      allData = [];
-      processedData = [];
-      filterAndDisplayResults(); 
-      Swal.fire({icon:'info',title:'Bersih!', showConfirmButton: false, timer: 1000});
-    }
-    
-    // --- EVENT LISTENERS UNTUK FILTER ---
-    document.getElementById('hideZeroValues').addEventListener('change', filterAndDisplayResults);
-    
-    document.getElementById('filterCabang').addEventListener('input', (e) => {
-        filters.cabang = e.target.value.toLowerCase();
-        filterAndDisplayResults();
-    });
-    document.getElementById('filterKode').addEventListener('input', (e) => {
-        filters.kode = e.target.value.toLowerCase();
-        filterAndDisplayResults();
-    });
-    document.getElementById('filterNama').addEventListener('input', (e) => {
-        filters.nama = e.target.value.toLowerCase();
-        filterAndDisplayResults();
-    });
-    document.getElementById('filterQuantity').addEventListener('input', (e) => {
-        filters.quantity = e.target.value.toLowerCase();
-        filterAndDisplayResults();
-    });
-
-  </script>
 </body>
 </html>
-
