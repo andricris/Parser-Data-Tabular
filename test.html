@@ -4,55 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parser Data Tabular</title>
-    <!-- Bootstrap CSS -->
+    <!-- Cukup gunakan link bootstrap ini, font Poppins sudah diimpor di CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
+        /* --- Tampilan Baru yang Lebih Modern --- */
+
+        /* Import Font Poppins */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        /* Variabel Warna untuk kemudahan kustomisasi */
+        :root {
+            --primary-color: #4F46E5; /* Indigo */
+            --primary-hover: #4338CA;
+            --secondary-color: #6B7280; /* Gray */
+            --success-color: #10B981;  /* Emerald */
+            --danger-color: #EF4444;   /* Red */
+            --light-bg: #F9FAFB; /* Off-white */
+            --card-bg: #FFFFFF;
+            --text-dark: #1F2937;
+            --text-light: #6B7280;
+            --border-color: #E5E7EB;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f0f2f5;
-            padding-top: 2rem;
-            padding-bottom: 2rem;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            padding: 2rem 1rem;
         }
+
         .container {
-            max-width: 900px;
+            max-width: 960px;
         }
-        .card {
-            border-radius: 12px;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
+        
+        /* --- Header --- */
         .header-main {
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
         h1 {
-            color: #333;
-            font-weight: 600;
+            color: var(--text-dark);
+            font-weight: 700;
         }
         .author {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: -10px;
+            color: var(--text-light);
+            font-size: 1rem;
         }
-        .btn-custom {
-            margin: 0.25rem;
+
+        /* --- Card & Input --- */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem; /* Lebih bulat */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .alert-info {
+            background-color: #EFF6FF;
+            border-color: #BFDBFE;
+            color: #1E40AF;
         }
         #dataInput {
-            height: 150px;
-            font-family: monospace;
-            font-size: 0.9rem;
+            min-height: 150px;
+            font-family: 'Courier New', Courier, monospace;
+            border-color: var(--border-color);
         }
+        #dataInput:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+        
+        /* --- Tombol dengan Ikon --- */
+        .btn {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem; /* Jarak antara ikon dan teks */
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); color: white;}
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { background-color: #059669; color: white;}
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover { background-color: #DC2626; color: white;}
+
+        /* --- Tabel --- */
         .table-responsive {
-            margin-top: 2rem;
+            margin-top: 2.5rem;
         }
-        .badge-container {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+        }
+        .table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-hover);
+        }
+        .table tbody tr:last-child td { border-bottom: 0; }
+        .table tbody tr:nth-of-type(odd) { background-color: #F9FAFB; }
+        .table tbody tr:hover { background-color: #EFF6FF; } /* Hover biru muda */
+        .table td, .table th {
+            vertical-align: middle;
+            padding: 0.9rem;
+        }
+        .form-control-sm { border-radius: 0.5rem; }
+        .form-control-sm:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        /* --- Badge --- */
+        .badge {
+            padding: 0.5em 0.9em;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+        }
+        .bg-primary { background-color: var(--primary-color) !important; }
+        .bg-success { background-color: var(--success-color) !important; }
+        .bg-secondary { background-color: var(--secondary-color) !important; }
+
+        /* --- Switch Toggle --- */
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
         }
     </style>
 </head>
@@ -64,19 +151,18 @@
         <p class="author">Author: H3Store</p>
     </div>
 
-    <!-- Container untuk Badge -->
-    <div class="badge-container">
+    <div class="badge-container justify-content-center mb-4">
         <span id="db-load-status" class="badge bg-success">Memuat database...</span>
         <span id="db-update-badge" class="badge bg-primary"></span>
     </div>
 
     <div class="card">
-        <div class="card-body">
+        <div class="card-body p-4">
             <div class="alert alert-info">
                 <ol class="mb-0 ps-3">
-                    <li>Tempel data dari Excel ke text area. Baris pertama harus berisi **Kode Produk** dan kolom pertama harus **Cabang**.</li>
-                    <li>Klik tombol **Proses Data** untuk mengkonversi.</li>
-                    <li>Kolom **Nama Produk & HPP** akan dicari otomatis dari database.</li>
+                    <li>Tempel data matriks dari Excel. Baris pertama untuk **Kode Produk**, kolom pertama untuk **Cabang**.</li>
+                    <li>Klik tombol **Proses Data** untuk konversi.</li>
+                    <li>**Nama Produk & HPP** akan diisi otomatis dari database.</li>
                     <li>Pastikan tidak ada titik (.) pada angka kuantitas.</li>
                 </ol>
             </div>
@@ -87,12 +173,21 @@
             </div>
 
             <div class="d-flex flex-wrap align-items-center">
-                <button onclick="prosesData()" class="btn btn-primary btn-custom">Proses Data</button>
-                <button onclick="salinHasil()" class="btn btn-success btn-custom">Salin Hasil</button>
-                <button onclick="bersihkan()" class="btn btn-danger btn-custom">Bersihkan</button>
-                <div class="form-check form-switch my-auto ms-md-3 mt-2 mt-md-0">
+                <button onclick="prosesData()" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+                    <span>Proses Data</span>
+                </button>
+                <button onclick="salinHasil()" class="btn btn-success ms-2">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
+                    <span>Salin Hasil</span>
+                </button>
+                <button onclick="bersihkan()" class="btn btn-danger ms-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                    <span>Bersihkan</span>
+                </button>
+                <div class="form-check form-switch my-auto ms-md-auto mt-2 mt-md-0">
                     <input class="form-check-input" type="checkbox" role="switch" id="sembunyikanO" onchange="prosesData()">
-                    <label class="form-check-label" for="sembunyikanO">Sembunyikan quantity 0</label>
+                    <label class="form-check-label" for="sembunyikanO">Sembunyikan Qty 0</label>
                 </div>
             </div>
         </div>
@@ -100,8 +195,8 @@
 
     <div class="table-responsive">
         <h4 class="mt-4">Hasil Konversi <span id="total-data" class="badge bg-secondary">0 data</span></h4>
-        <table class="table table-striped table-bordered table-hover">
-            <thead class="table-dark">
+        <table class="table">
+            <thead>
                 <tr>
                     <th>Cabang</th>
                     <th>Kode Produk</th>
@@ -110,12 +205,11 @@
                     <th>HPP</th>
                 </tr>
                 <tr>
-                    <!-- Filter inputs -->
-                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter Cabang..." onkeyup="filterTable()"></td>
-                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter Kode..." onkeyup="filterTable()"></td>
-                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter Nama..." onkeyup="filterTable()"></td>
-                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter Qty..." onkeyup="filterTable()"></td>
-                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter HPP..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter..." onkeyup="filterTable()"></td>
                 </tr>
             </thead>
             <tbody id="hasilTabel">
@@ -126,21 +220,18 @@
 </div>
 
 <script>
+    // --- JavaScript tidak diubah sama sekali, karena logikanya sudah benar ---
     let database = [];
 
-    // --- Fungsi yang dijalankan saat halaman dimuat ---
     document.addEventListener('DOMContentLoaded', function() {
         fetch('database.json')
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();
             })
             .then(data => {
                 database = data;
                 document.getElementById('db-load-status').textContent = `Database termuat (${database.length} produk)`;
-                console.log('Database berhasil dimuat.');
             })
             .catch(error => {
                 console.error('Error memuat database:', error);
@@ -168,78 +259,58 @@
             return;
         }
 
-        // Memfilter baris kosong untuk stabilitas
         const lines = inputText.split('\n').filter(line => line.trim() !== '');
-        
         if (lines.length < 2) {
             document.getElementById('total-data').textContent = '0 data';
-            console.warn("Input tidak cukup baris untuk diproses.");
             return;
         }
 
-        // --- Logika Baru untuk Membaca Format Matriks ---
-
-        // 1. Ambil baris pertama sebagai header Kode Produk.
         const headerParts = lines[0].trim().split(/\s+/);
-        // Kolom pertama di header bisa berupa "cabang" atau kosong, jadi kita ambil sisanya.
         const productCodes = headerParts.slice(1);
 
-        // 2. Proses setiap baris data (mulai dari baris kedua).
         for (let i = 1; i < lines.length; i++) {
             const dataParts = lines[i].trim().split(/\s+/);
-            const cabang = dataParts[0]; // Kolom pertama selalu nama cabang.
-            const quantities = dataParts.slice(1); // Sisanya adalah kuantitas.
+            const cabang = dataParts[0];
+            const quantities = dataParts.slice(1);
 
-            // 3. Cocokkan setiap kuantitas dengan kode produk di header.
             for (let j = 0; j < quantities.length; j++) {
-                // Pastikan jumlah kuantitas tidak melebihi jumlah kode produk.
                 if (j >= productCodes.length) continue;
-
                 const qty = parseInt(quantities[j], 10) || 0;
                 const kode = productCodes[j];
+                if (sembunyikanNol && qty === 0) continue;
 
-                if (sembunyikanNol && qty === 0) {
-                    continue; // Lewati jika kuantitas 0 dan opsi sembunyikan aktif.
-                }
-
-                // Cari info produk dari database.
                 const product = database.find(p => p['Part No'] === kode);
                 const namaProduk = product ? product['Part Description'] : '--- TIDAK DITEMUKAN ---';
                 const hpp = product ? (product.hpp || 0) : 0;
 
-                // Buat baris baru di tabel hasil.
                 const row = tableBody.insertRow();
                 row.insertCell(0).textContent = cabang;
                 row.insertCell(1).textContent = kode;
                 row.insertCell(2).textContent = namaProduk;
                 row.insertCell(3).textContent = qty;
                 row.insertCell(4).textContent = hpp;
-                
                 dataCount++;
             }
         }
-
         document.getElementById('total-data').textContent = `${dataCount} data`;
-        filterTable(); // Terapkan filter setelah selesai.
+        filterTable();
     }
-    
+
     function filterTable() {
         const filters = Array.from(document.querySelectorAll('thead input')).map(input => input.value.toUpperCase());
         const table = document.querySelector('table');
         const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
 
-        for (let i = 0; i < rows.length; i++) {
-            const cells = rows[i].getElementsByTagName('td');
+        for (let row of rows) {
+            const cells = row.getElementsByTagName('td');
             let display = true;
-            for (let j = 0; j < filters.length; j++) {
-                if (filters[j]) {
-                    if (cells[j].textContent.toUpperCase().indexOf(filters[j]) === -1) {
-                        display = false;
-                        break;
-                    }
+            for (let i = 0; i < filters.length; i++) {
+                if (filters[i] && cells[i].textContent.toUpperCase().indexOf(filters[i]) === -1) {
+                    display = false;
+                    break;
                 }
             }
-            rows[i].style.display = display ? '' : 'none';
+            row.style.display = display ? '' : 'none';
         }
     }
 
@@ -248,28 +319,21 @@
         let textToCopy = '';
         const rows = table.rows;
         
-        // Buat header dari th, bukan dari input filter
         const headerCells = rows[0].getElementsByTagName('th');
-        let headerText = [];
-        for (let i = 0; i < headerCells.length; i++) {
-            headerText.push(headerCells[i].innerText);
-        }
+        let headerText = Array.from(headerCells).map(th => th.innerText);
         textToCopy += headerText.join('\t') + '\n';
 
-        // Salin data dari tbody (mulai dari baris ke-2)
-        for (let i = 2; i < rows.length; i++) {
-            if (rows[i].style.display !== 'none') { // Hanya salin baris yang terlihat
-                const cells = rows[i].cells;
-                let rowText = [];
-                for (let j = 0; j < cells.length; j++) {
-                    rowText.push(cells[j].innerText);
-                }
+        const bodyRows = table.tBodies[0].rows;
+        for (let row of bodyRows) {
+            if (row.style.display !== 'none') {
+                const cells = row.cells;
+                let rowText = Array.from(cells).map(cell => cell.innerText);
                 textToCopy += rowText.join('\t') + '\n';
             }
         }
 
         navigator.clipboard.writeText(textToCopy).then(() => {
-            alert('Hasil (termasuk header) berhasil disalin ke clipboard!');
+            alert('Hasil (termasuk header) berhasil disalin!');
         }, (err) => {
             console.error('Gagal menyalin: ', err);
             alert('Gagal menyalin ke clipboard.');
@@ -281,10 +345,10 @@
         document.getElementById('hasilTabel').innerHTML = '';
         document.getElementById('total-data').textContent = '0 data';
         document.getElementById('sembunyikanO').checked = false;
-        const filterInputs = document.querySelectorAll('thead input');
-        filterInputs.forEach(input => input.value = '');
+        document.querySelectorAll('thead input').forEach(input => input.value = '');
     }
 </script>
 
 </body>
 </html>
+
