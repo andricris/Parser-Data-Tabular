@@ -4,322 +4,254 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parser Data Tabular</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f0f2f5;
-            padding: 2rem 0;
+            padding-top: 2rem;
         }
         .container {
-            max-width: 1200px;
+            max-width: 900px;
         }
-        .main-card {
-            background-color: white;
-            border-radius: 1rem;
-            padding: 2rem;
-            box-shadow: 0 4px
- 12px rgba(0,0,0,0.1);
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        .header-title {
+        .header-main {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        h1 {
             color: #333;
-            font-weight: 700;
-        }
-        .header-author {
-            color: #555;
             font-weight: 600;
         }
-        #dbStatus, #updateDateBadge {
+        .author {
             font-size: 0.9rem;
-            font-weight: 600;
+            color: #666;
+            margin-top: -10px;
         }
-        .form-label {
-            font-weight: 600;
-            color: #444;
+        .btn-custom {
+            margin: 0.25rem;
         }
-        textarea.form-control {
-            min-height: 150px;
+        #dataInput {
+            height: 150px;
             font-family: monospace;
-        }
-        .btn-process {
-            background-color: #0d6efd;
-            color: white;
-        }
-        .btn-copy {
-            background-color: #198754;
-            color: white;
-        }
-        .btn-clear {
-            background-color: #6c757d;
-            color: white;
-        }
-        #hasilTabel th {
-            background-color: #0d6efd;
-            color: white;
-            position: sticky;
-            top: 0;
-        }
-        #hasilTabel td, #hasilTabel th {
-            vertical-align: middle;
-            text-align: left;
-            padding: 0.75rem;
-        }
-        #filterRow input {
-            width: 100%;
-            border: 1px solid #ccc;
-            padding: 6px;
-            border-radius: 4px;
+            font-size: 0.9rem;
         }
         .table-responsive {
-            max-height: 500px;
-            overflow-y: auto;
+            margin-top: 2rem;
+        }
+        .badge-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 1.5rem;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="text-center mb-4">
-        <h1 class="header-title">Parser Data Tabular</h1>
-        <p class="header-author">Author: H3Store</p>
-        <div>
-            <span class="badge bg-success" id="dbStatus">Memuat database...</span>
-            <!-- BADGE BARU UNTUK TANGGAL UPDATE -->
-            <span class="badge bg-info" id="updateDateBadge"></span>
+    <div class="header-main">
+        <h1>Parser Data Tabular</h1>
+        <p class="author">Author: H3Store</p>
+    </div>
+
+    <div class="badge-container">
+        <span id="db-load-status" class="badge bg-success">Memuat database...</span>
+        <span id="db-update-badge" class="badge bg-primary"></span>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-info">
+                <ol class="mb-0 ps-3">
+                    <li>Kolom pertama data -> <strong>Cabang</strong>, header kolom lain -> <strong>Kode Produk</strong>.</li>
+                    <li>Tempel data dari Excel ke text area -> klik <strong>Proses Data</strong>.</li>
+                    <li>Kolom <strong>Nama Produk & HPP</strong> di-lookup dari database.</li>
+                    <li>Jangan sampai ada titik di QTY jika ada akan membaca angka depan saja.</li>
+                </ol>
+            </div>
+
+            <div class="mb-3">
+                <label for="dataInput" class="form-label"><strong>Data Input:</strong></label>
+                <textarea class="form-control" id="dataInput" placeholder="Contoh:&#10;CABANG   PL3000135&#10;         PL3000136"></textarea>
+            </div>
+
+            <div class="d-flex flex-wrap">
+                <button onclick="prosesData()" class="btn btn-primary btn-custom">Proses Data</button>
+                <button onclick="salinHasil()" class="btn btn-success btn-custom">Salin Hasil</button>
+                <button onclick="bersihkan()" class="btn btn-danger btn-custom">Bersihkan</button>
+                <div class="form-check form-switch my-auto ms-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="sembunyikanO" onchange="prosesData()">
+                    <label class="form-check-label" for="sembunyikanO">Sembunyikan quantity 0</label>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Main Card -->
-    <div class="main-card">
-        <!-- Instruction Box -->
-        <div class="alert alert-primary">
-            <h5 class="alert-heading">Petunjuk Penggunaan:</h5>
-            <ol class="mb-0">
-                <li>Kolom pertama data = <b>Cabang</b>, header kolom lain = <b>Kode Produk</b>.</li>
-                <li>Tempel data dari Excel ke textarea &rarr; klik <b>Proses Data</b>.</li>
-                <li>Kolom <b>Nama Produk</b> dan <b>HPP</b> di-lookup dari database berdasarkan <b>Kode Produk</b>.</li>
-                <li><b>Jangan sampai ada titik di QTY</b> jika ada akan membaca angka depan saja.</li>
-            </ol>
-        </div>
-
-        <!-- Data Input -->
-        <div class="mb-3">
-            <label for="dataInput" class="form-label">Data Input:</label>
-            <textarea class="form-control" id="dataInput" rows="8" placeholder="Contoh:&#10;CABANG   PE300016   PE300013"></textarea>
-        </div>
-        
-        <!-- Controls -->
-        <div class="d-flex flex-wrap align-items-center gap-2">
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="hideZero" checked>
-                <label class="form-check-label" for="hideZero">Sembunyikan quantity 0</label>
-            </div>
-            <button class="btn btn-process" id="prosesBtn">▶ Proses Data</button>
-            <button class="btn btn-copy" id="salinBtn">📋 Salin Hasil</button>
-            <button class="btn btn-clear" id="bersihkanBtn">🗑️ Bersihkan</button>
-        </div>
-
-        <hr class="my-4">
-
-        <!-- Hasil Konversi -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h4 class="mb-0">Hasil Konversi</h4>
-            <span class="badge bg-secondary" id="dataCount">0 data</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered table-hover">
-                <thead id="hasilTabel">
-                    <tr>
-                        <th>Cabang</th>
-                        <th>Kode Produk</th>
-                        <th>Nama Produk</th>
-                        <th>Quantity</th>
-                        <th>HPP</th>
-                    </tr>
-                </thead>
-                <tbody id="hasilBody">
+    <div class="table-responsive">
+        <h4 class="mt-4">Hasil Konversi <span id="total-data" class="badge bg-secondary">0 data</span></h4>
+        <table class="table table-striped table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Cabang</th>
+                    <th>Kode Produk</th>
+                    <th>Nama Produk</th>
+                    <th>Quantity</th>
+                    <th>HPP</th>
+                </tr>
+                <tr>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter Cabang..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter Kode..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter Nama..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter Qty..." onkeyup="filterTable()"></td>
+                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter HPP..." onkeyup="filterTable()"></td>
+                </tr>
+            </thead>
+            <tbody id="hasilTabel">
                 </tbody>
-                <tfoot>
-                    <tr id="filterRow">
-                        <th><input type="text" class="form-control form-control-sm" placeholder="Filter Cabang..."></th>
-                        <th><input type="text" class="form-control form-control-sm" placeholder="Filter Kode..."></th>
-                        <th><input type="text" class="form-control form-control-sm" placeholder="Filter Nama..."></th>
-                        <th><input type="text" class="form-control form-control-sm" placeholder="Filter Qty..."></th>
-                        <th><input type="text" class="form-control form-control-sm" placeholder="Filter HPP..."></th>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
+        </table>
     </div>
 </div>
 
 <script>
-    // Store database in a Map for fast lookups
-    const dbData = new Map();
+    let database = [];
 
-    // --- 1. MEMUAT DATABASE DAN MENAMPILKAN TANGGAL SAAT HALAMAN DIBUKA ---
-    document.addEventListener('DOMContentLoaded', async () => {
-        // Tampilkan tanggal update hari ini
-        const updateBadge = document.getElementById('updateDateBadge');
-        const today = new Date();
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        const formattedDate = today.toLocaleDateString('id-ID', options);
-        updateBadge.textContent = 'Update Terakhir: ' + formattedDate;
-        
-        // Muat database dari file JSON
-        try {
-            const response = await fetch('database.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            // Populate the Map with "Part No" as key and the item object as value
-            data.forEach(item => {
-                dbData.set(item["Part No"], {
-                    description: item["Part Description"],
-                    hpp: item.hpp
-                });
+    // --- Fungsi yang dijalankan saat halaman dimuat ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Memuat database dari file JSON
+        fetch('database.json')
+            .then(response => response.json())
+            .then(data => {
+                database = data;
+                document.getElementById('db-load-status').textContent = `Database termuat (${database.length} produk)`;
+                console.log('Database berhasil dimuat.');
+            })
+            .catch(error => {
+                console.error('Error memuat database:', error);
+                document.getElementById('db-load-status').textContent = 'Gagal memuat database!';
+                document.getElementById('db-load-status').classList.replace('bg-success', 'bg-danger');
             });
-            const dbStatus = document.getElementById('dbStatus');
-            dbStatus.textContent = `Database dimuat (${dbData.size} produk)`;
-            dbStatus.classList.replace('bg-warning', 'bg-success');
-        } catch (error) {
-            console.error('Gagal memuat database:', error);
-            const dbStatus = document.getElementById('dbStatus');
-            dbStatus.textContent = 'Gagal memuat database!';
-            dbStatus.classList.replace('bg-success', 'bg-danger');
-        }
+
+        // 2. Menambahkan tanggal update database pada badge
+        const badgeUpdate = document.getElementById('db-update-badge');
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        badgeUpdate.textContent = `Database terbaru per ${day}/${month}/${year}`;
     });
 
-    // --- 2. FUNGSI UTAMA UNTUK MEMPROSES DATA ---
     function prosesData() {
-        const input = document.getElementById('dataInput').value.trim();
-        const hasilBody = document.getElementById('hasilBody');
-        const dataCount = document.getElementById('dataCount');
-        hasilBody.innerHTML = ''; // Bersihkan hasil sebelumnya
+        const inputText = document.getElementById('dataInput').value.trim();
+        const lines = inputText.split('\n');
+        const tableBody = document.getElementById('hasilTabel');
+        const sembunyikanNol = document.getElementById('sembunyikanO').checked;
+        tableBody.innerHTML = '';
+        let dataCount = 0;
 
-        if (!input) {
-            dataCount.textContent = '0 data';
-            return;
-        }
-
-        const lines = input.split('\n');
-        const productCounts = new Map();
-        
-        let cabang = '';
+        let currentCabang = '';
 
         lines.forEach(line => {
-            // Split by tab or multiple spaces
-            const parts = line.trim().split(/\s+/);
+            if (!line.trim()) return;
+
+            const parts = line.split(/\s+/);
             if (parts.length < 2) return;
 
-            cabang = parts[0];
-            const productCodes = parts.slice(1);
+            let cabang, kode, qty;
 
-            if (!productCounts.has(cabang)) {
-                productCounts.set(cabang, new Map());
+            if (parts[0].match(/^[A-Z]{2}\d{4}$/)) { // Cek jika kolom pertama adalah kode cabang
+                currentCabang = parts[0];
+                cabang = currentCabang;
+                kode = parts[1];
+                qty = parseInt(parts[2], 10) || 0;
+            } else {
+                cabang = currentCabang;
+                kode = parts[0];
+                qty = parseInt(parts[1], 10) || 0;
             }
 
-            const branchMap = productCounts.get(cabang);
+            if (sembunyikanNol && qty === 0) return;
 
-            productCodes.forEach(code => {
-                const cleanCode = code.trim();
-                if (cleanCode) {
-                    branchMap.set(cleanCode, (branchMap.get(cleanCode) || 0) + 1);
+            // Cari produk di database
+            const product = database.find(p => p['Part No'] === kode);
+            const namaProduk = product ? product['Part Description'] : '--- TIDAK DITEMUKAN ---';
+            
+            // MODIFIKASI: Ambil HPP dari database, jika tidak ada beri nilai 0
+            const hpp = product ? (product.hpp || 0) : 0;
+
+            // Buat baris baru di tabel
+            const row = tableBody.insertRow();
+            row.insertCell(0).textContent = cabang;
+            row.insertCell(1).textContent = kode;
+            row.insertCell(2).textContent = namaProduk;
+            row.insertCell(3).textContent = qty;
+            
+            // MODIFIKASI: Tambahkan sel untuk HPP
+            row.insertCell(4).textContent = hpp;
+            
+            dataCount++;
+        });
+
+        document.getElementById('total-data').textContent = `${dataCount} data`;
+        filterTable(); // Terapkan filter setelah memproses data
+    }
+    
+    function filterTable() {
+        const filters = Array.from(document.querySelectorAll('thead input')).map(input => input.value.toUpperCase());
+        const table = document.querySelector('table');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            let display = true;
+            for (let j = 0; j < filters.length; j++) {
+                if (filters[j]) {
+                    if (cells[j].textContent.toUpperCase().indexOf(filters[j]) === -1) {
+                        display = false;
+                        break;
+                    }
                 }
-            });
-        });
-
-        let totalData = 0;
-        const hideZero = document.getElementById('hideZero').checked;
-
-        // Iterate through branches and their products
-        productCounts.forEach((products, branch) => {
-            products.forEach((quantity, productCode) => {
-                if (hideZero && quantity === 0) return;
-
-                // VLOOKUP dari database menggunakan productCode sebagai primary key
-                const productInfo = dbData.get(productCode) || {
-                    description: '--- TIDAK DITEMUKAN ---', // Fallback untuk Nama Produk
-                    hpp: 'N/A' // Fallback untuk HPP
-                };
-
-                const newRow = hasilBody.insertRow();
-                newRow.innerHTML = `
-                    <td>${branch}</td>
-                    <td>${productCode}</td>
-                    <td>${productInfo.description}</td>
-                    <td>${quantity}</td>
-                    <td>${productInfo.hpp}</td>
-                `;
-                totalData++;
-            });
-        });
-
-        dataCount.textContent = `${totalData} data`;
+            }
+            rows[i].style.display = display ? '' : 'none';
+        }
     }
 
-    // --- 3. FUNGSI UNTUK MENYALIN HASIL KE CLIPBOARD ---
     function salinHasil() {
-        const tableBody = document.getElementById('hasilBody');
-        let textToCopy = "Cabang\tKode Produk\tNama Produk\tQuantity\tHPP\n";
+        const table = document.querySelector('table');
+        let textToCopy = '';
+        const rows = table.rows;
 
-        for (const row of tableBody.rows) {
-            // Only copy visible rows (respecting filters)
-            if (row.style.display !== 'none') {
-                const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
-                textToCopy += cells.join('\t') + '\n';
+        // Mulai dari baris ke-2 untuk melewati header filter
+        for (let i = 2; i < rows.length; i++) {
+            if (rows[i].style.display !== 'none') {
+                const cells = rows[i].cells;
+                let rowText = [];
+                for (let j = 0; j < cells.length; j++) {
+                    rowText.push(cells[j].innerText);
+                }
+                textToCopy += rowText.join('\t') + '\n';
             }
         }
 
         navigator.clipboard.writeText(textToCopy).then(() => {
             alert('Hasil berhasil disalin ke clipboard!');
-        }).catch(err => {
-            console.error('Gagal menyalin:', err);
-            alert('Gagal menyalin. Cek konsol untuk error.');
+        }, (err) => {
+            alert('Gagal menyalin: ', err);
         });
     }
 
-    // --- 4. FUNGSI UNTUK FILTER TABEL ---
-    function filterTable() {
-        const tableBody = document.getElementById('hasilBody');
-        const filterInputs = document.querySelectorAll('#filterRow input');
-        const filters = Array.from(filterInputs).map(input => input.value.toUpperCase());
-
-        let visibleRows = 0;
-
-        for (const row of tableBody.rows) {
-            let display = true;
-            for (let i = 0; i < filters.length; i++) {
-                if (filters[i] && !row.cells[i].textContent.toUpperCase().includes(filters[i])) {
-                    display = false;
-                    break;
-                }
-            }
-            row.style.display = display ? '' : 'none';
-            if(display) visibleRows++;
-        }
-        document.getElementById('dataCount').textContent = `${visibleRows} data`;
-    }
-    
-    // --- 5. EVENT LISTENERS ---
-    document.getElementById('prosesBtn').addEventListener('click', prosesData);
-    document.getElementById('salinBtn').addEventListener('click', salinHasil);
-    document.getElementById('bersihkanBtn').addEventListener('click', () => {
+    function bersihkan() {
         document.getElementById('dataInput').value = '';
-        document.getElementById('hasilBody').innerHTML = '';
-        document.getElementById('dataCount').textContent = '0 data';
-        document.querySelectorAll('#filterRow input').forEach(input => input.value = '');
-    });
-    
-    // Attach event listeners to all filter inputs
-    document.querySelectorAll('#filterRow input').forEach(input => {
-        input.addEventListener('keyup', filterTable);
-    });
-
+        document.getElementById('hasilTabel').innerHTML = '';
+        document.getElementById('total-data').textContent = '0 data';
+        const filterInputs = document.querySelectorAll('thead input');
+        filterInputs.forEach(input => input.value = '');
+    }
 </script>
 
 </body>
