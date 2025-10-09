@@ -220,7 +220,6 @@
 </div>
 
 <script>
-    // --- JavaScript tidak diubah sama sekali, karena logikanya sudah benar ---
     let database = [];
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -239,12 +238,10 @@
                 document.getElementById('db-load-status').classList.replace('bg-success', 'bg-danger');
             });
 
-        const badgeUpdate = document.getElementById('db-update-badge');
-        const today = new Date();
-        const day = String(today.getDate()).padStart(2, '0');
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const year = today.getFullYear();
-        badgeUpdate.textContent = `Database terbaru per ${day}/${month}/${year}`;
+        // --- TANGGAL UPDATE MANUAL ---
+        // Ganti tanggal di dalam tanda kutip ("") setiap kali Anda memperbarui database.
+        const lastUpdateDate = "09/10/2025"; // Format: DD/MM/YYYY
+        document.getElementById('db-update-badge').textContent = `Database diperbarui ${lastUpdateDate}`;
     });
 
     function prosesData() {
@@ -351,4 +348,3 @@
 
 </body>
 </html>
-
