@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parser Data Tabular</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f0f2f5;
             padding-top: 2rem;
+            padding-bottom: 2rem;
         }
         .container {
             max-width: 900px;
@@ -49,6 +52,7 @@
             gap: 10px;
             justify-content: center;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap;
         }
     </style>
 </head>
@@ -60,6 +64,7 @@
         <p class="author">Author: H3Store</p>
     </div>
 
+    <!-- Container untuk Badge -->
     <div class="badge-container">
         <span id="db-load-status" class="badge bg-success">Memuat database...</span>
         <span id="db-update-badge" class="badge bg-primary"></span>
@@ -69,23 +74,23 @@
         <div class="card-body">
             <div class="alert alert-info">
                 <ol class="mb-0 ps-3">
-                    <li>Kolom pertama data -> <strong>Cabang</strong>, header kolom lain -> <strong>Kode Produk</strong>.</li>
-                    <li>Tempel data dari Excel ke text area -> klik <strong>Proses Data</strong>.</li>
-                    <li>Kolom <strong>Nama Produk & HPP</strong> di-lookup dari database.</li>
-                    <li>Jangan sampai ada titik di QTY jika ada akan membaca angka depan saja.</li>
+                    <li>Tempel data dari Excel ke text area. Baris pertama harus berisi **Kode Produk** dan kolom pertama harus **Cabang**.</li>
+                    <li>Klik tombol **Proses Data** untuk mengkonversi.</li>
+                    <li>Kolom **Nama Produk & HPP** akan dicari otomatis dari database.</li>
+                    <li>Pastikan tidak ada titik (.) pada angka kuantitas.</li>
                 </ol>
             </div>
 
             <div class="mb-3">
                 <label for="dataInput" class="form-label"><strong>Data Input:</strong></label>
-                <textarea class="form-control" id="dataInput" placeholder="Contoh:&#10;CABANG   PL3000135&#10;         PL3000136"></textarea>
+                <textarea class="form-control" id="dataInput" placeholder="Contoh:&#10;cabang   P37JYPL1  P9216180&#10;bks1     1         10&#10;tgr1     0         4"></textarea>
             </div>
 
-            <div class="d-flex flex-wrap">
+            <div class="d-flex flex-wrap align-items-center">
                 <button onclick="prosesData()" class="btn btn-primary btn-custom">Proses Data</button>
                 <button onclick="salinHasil()" class="btn btn-success btn-custom">Salin Hasil</button>
                 <button onclick="bersihkan()" class="btn btn-danger btn-custom">Bersihkan</button>
-                <div class="form-check form-switch my-auto ms-3">
+                <div class="form-check form-switch my-auto ms-md-3 mt-2 mt-md-0">
                     <input class="form-check-input" type="checkbox" role="switch" id="sembunyikanO" onchange="prosesData()">
                     <label class="form-check-label" for="sembunyikanO">Sembunyikan quantity 0</label>
                 </div>
@@ -105,6 +110,7 @@
                     <th>HPP</th>
                 </tr>
                 <tr>
+                    <!-- Filter inputs -->
                     <td><input type="text" class="form-control form-control-sm" placeholder="Filter Cabang..." onkeyup="filterTable()"></td>
                     <td><input type="text" class="form-control form-control-sm" placeholder="Filter Kode..." onkeyup="filterTable()"></td>
                     <td><input type="text" class="form-control form-control-sm" placeholder="Filter Nama..." onkeyup="filterTable()"></td>
@@ -113,7 +119,8 @@
                 </tr>
             </thead>
             <tbody id="hasilTabel">
-                </tbody>
+                <!-- Hasil akan ditampilkan di sini -->
+            </tbody>
         </table>
     </div>
 </div>
@@ -123,9 +130,13 @@
 
     // --- Fungsi yang dijalankan saat halaman dimuat ---
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Memuat database dari file JSON
         fetch('database.json')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 database = data;
                 document.getElementById('db-load-status').textContent = `Database termuat (${database.length} produk)`;
@@ -137,7 +148,6 @@
                 document.getElementById('db-load-status').classList.replace('bg-success', 'bg-danger');
             });
 
-        // 2. Menambahkan tanggal update database pada badge
         const badgeUpdate = document.getElementById('db-update-badge');
         const today = new Date();
         const day = String(today.getDate()).padStart(2, '0');
@@ -148,57 +158,69 @@
 
     function prosesData() {
         const inputText = document.getElementById('dataInput').value.trim();
-        const lines = inputText.split('\n');
         const tableBody = document.getElementById('hasilTabel');
         const sembunyikanNol = document.getElementById('sembunyikanO').checked;
         tableBody.innerHTML = '';
         let dataCount = 0;
 
-        let currentCabang = '';
+        if (!inputText) {
+            document.getElementById('total-data').textContent = '0 data';
+            return;
+        }
 
-        lines.forEach(line => {
-            if (!line.trim()) return;
+        // Memfilter baris kosong untuk stabilitas
+        const lines = inputText.split('\n').filter(line => line.trim() !== '');
+        
+        if (lines.length < 2) {
+            document.getElementById('total-data').textContent = '0 data';
+            console.warn("Input tidak cukup baris untuk diproses.");
+            return;
+        }
 
-            const parts = line.split(/\s+/);
-            if (parts.length < 2) return;
+        // --- Logika Baru untuk Membaca Format Matriks ---
 
-            let cabang, kode, qty;
+        // 1. Ambil baris pertama sebagai header Kode Produk.
+        const headerParts = lines[0].trim().split(/\s+/);
+        // Kolom pertama di header bisa berupa "cabang" atau kosong, jadi kita ambil sisanya.
+        const productCodes = headerParts.slice(1);
 
-            if (parts[0].match(/^[A-Z]{2}\d{4}$/)) { // Cek jika kolom pertama adalah kode cabang
-                currentCabang = parts[0];
-                cabang = currentCabang;
-                kode = parts[1];
-                qty = parseInt(parts[2], 10) || 0;
-            } else {
-                cabang = currentCabang;
-                kode = parts[0];
-                qty = parseInt(parts[1], 10) || 0;
+        // 2. Proses setiap baris data (mulai dari baris kedua).
+        for (let i = 1; i < lines.length; i++) {
+            const dataParts = lines[i].trim().split(/\s+/);
+            const cabang = dataParts[0]; // Kolom pertama selalu nama cabang.
+            const quantities = dataParts.slice(1); // Sisanya adalah kuantitas.
+
+            // 3. Cocokkan setiap kuantitas dengan kode produk di header.
+            for (let j = 0; j < quantities.length; j++) {
+                // Pastikan jumlah kuantitas tidak melebihi jumlah kode produk.
+                if (j >= productCodes.length) continue;
+
+                const qty = parseInt(quantities[j], 10) || 0;
+                const kode = productCodes[j];
+
+                if (sembunyikanNol && qty === 0) {
+                    continue; // Lewati jika kuantitas 0 dan opsi sembunyikan aktif.
+                }
+
+                // Cari info produk dari database.
+                const product = database.find(p => p['Part No'] === kode);
+                const namaProduk = product ? product['Part Description'] : '--- TIDAK DITEMUKAN ---';
+                const hpp = product ? (product.hpp || 0) : 0;
+
+                // Buat baris baru di tabel hasil.
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = cabang;
+                row.insertCell(1).textContent = kode;
+                row.insertCell(2).textContent = namaProduk;
+                row.insertCell(3).textContent = qty;
+                row.insertCell(4).textContent = hpp;
+                
+                dataCount++;
             }
-
-            if (sembunyikanNol && qty === 0) return;
-
-            // Cari produk di database
-            const product = database.find(p => p['Part No'] === kode);
-            const namaProduk = product ? product['Part Description'] : '--- TIDAK DITEMUKAN ---';
-            
-            // MODIFIKASI: Ambil HPP dari database, jika tidak ada beri nilai 0
-            const hpp = product ? (product.hpp || 0) : 0;
-
-            // Buat baris baru di tabel
-            const row = tableBody.insertRow();
-            row.insertCell(0).textContent = cabang;
-            row.insertCell(1).textContent = kode;
-            row.insertCell(2).textContent = namaProduk;
-            row.insertCell(3).textContent = qty;
-            
-            // MODIFIKASI: Tambahkan sel untuk HPP
-            row.insertCell(4).textContent = hpp;
-            
-            dataCount++;
-        });
+        }
 
         document.getElementById('total-data').textContent = `${dataCount} data`;
-        filterTable(); // Terapkan filter setelah memproses data
+        filterTable(); // Terapkan filter setelah selesai.
     }
     
     function filterTable() {
@@ -225,10 +247,18 @@
         const table = document.querySelector('table');
         let textToCopy = '';
         const rows = table.rows;
+        
+        // Buat header dari th, bukan dari input filter
+        const headerCells = rows[0].getElementsByTagName('th');
+        let headerText = [];
+        for (let i = 0; i < headerCells.length; i++) {
+            headerText.push(headerCells[i].innerText);
+        }
+        textToCopy += headerText.join('\t') + '\n';
 
-        // Mulai dari baris ke-2 untuk melewati header filter
+        // Salin data dari tbody (mulai dari baris ke-2)
         for (let i = 2; i < rows.length; i++) {
-            if (rows[i].style.display !== 'none') {
+            if (rows[i].style.display !== 'none') { // Hanya salin baris yang terlihat
                 const cells = rows[i].cells;
                 let rowText = [];
                 for (let j = 0; j < cells.length; j++) {
@@ -239,9 +269,10 @@
         }
 
         navigator.clipboard.writeText(textToCopy).then(() => {
-            alert('Hasil berhasil disalin ke clipboard!');
+            alert('Hasil (termasuk header) berhasil disalin ke clipboard!');
         }, (err) => {
-            alert('Gagal menyalin: ', err);
+            console.error('Gagal menyalin: ', err);
+            alert('Gagal menyalin ke clipboard.');
         });
     }
 
@@ -249,6 +280,7 @@
         document.getElementById('dataInput').value = '';
         document.getElementById('hasilTabel').innerHTML = '';
         document.getElementById('total-data').textContent = '0 data';
+        document.getElementById('sembunyikanO').checked = false;
         const filterInputs = document.querySelectorAll('thead input');
         filterInputs.forEach(input => input.value = '');
     }
